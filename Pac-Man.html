@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Modern 3D Pac-Man game with advanced graphics and gameplay">
+    <meta name="keywords" content="pac-man, 3d game, browser game, arcade, polsoft">
+    <meta name="author" content="Sebastian Januchowski">
+    <meta name="copyright" content="2026© Sebastian Januchowski. All rights reserved.">
+    <meta name="contact" content="polsoft.its@fastservice.com">
+    <meta name="repository" content="https://github.com/seb07uk">
+    <meta name="company" content="polsoft.ITS™ London">
+    <title>3D Pac-Man - polsoft.ITS™</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 15, 30, 0.95);
+            padding: 50px 60px;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            z-index: 100;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        #menu h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 
+                0 0 20px rgba(255, 215, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.6),
+                0 0 60px rgba(255, 215, 0, 0.4);
+            font-weight: bold;
+            animation: titlePulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes titlePulse {
+            0%, 100% {
+                transform: scale(1);
+                text-shadow: 
+                    0 0 20px rgba(255, 215, 0, 0.8),
+                    0 0 40px rgba(255, 215, 0, 0.6),
+                    0 0 60px rgba(255, 215, 0, 0.4);
+            }
+            50% {
+                transform: scale(1.05);
+                text-shadow: 
+                    0 0 30px rgba(255, 215, 0, 1),
+                    0 0 50px rgba(255, 215, 0, 0.8),
+                    0 0 70px rgba(255, 215, 0, 0.6);
+            }
+        }
+
+        #menu .subtitle {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+
+        .menu-btn {
+            display: block;
+            width: 100%;
+            padding: 15px 30px;
+            margin: 15px 0;
+            font-size: 20px;
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            color: #fff;
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .menu-btn:hover {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        #game-area {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            padding: 20px;
+        }
+
+        #game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(15, 15, 30, 0.8);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .fullscreen-btn {
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            color: #ffd700;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            min-width: 60px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-btn:hover {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .fullscreen-btn:active {
+            transform: translateY(0);
+        }
+
+        .score-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 
+                0 0 10px rgba(255, 215, 0, 0.8),
+                0 0 20px rgba(255, 215, 0, 0.6),
+                0 0 30px rgba(255, 215, 0, 0.4);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                text-shadow: 
+                    0 0 10px rgba(255, 215, 0, 0.8),
+                    0 0 20px rgba(255, 215, 0, 0.6),
+                    0 0 30px rgba(255, 215, 0, 0.4);
+            }
+            to {
+                text-shadow: 
+                    0 0 15px rgba(255, 215, 0, 1),
+                    0 0 25px rgba(255, 215, 0, 0.8),
+                    0 0 35px rgba(255, 215, 0, 0.6);
+            }
+        }
+
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #gameCanvas {
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            background: #000;
+            max-width: 90vmin;
+            max-height: 90vmin;
+        }
+
+        #top5-screen, #help-screen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 15, 30, 0.98);
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px solid #ffd700;
+            z-index: 100;
+            min-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        #top5-screen h2, #help-screen h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 32px;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+        }
+
+        .top5-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .top5-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #ffd700;
+        }
+
+        .top5-rank {
+            font-weight: bold;
+            color: #ffd700;
+            font-size: 20px;
+        }
+
+        .top5-score {
+            color: #fff;
+            font-size: 18px;
+        }
+
+        .help-content {
+            line-height: 1.8;
+            color: #ddd;
+        }
+
+        .help-content h3 {
+            color: #ffd700;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .help-content ul {
+            margin-left: 20px;
+        }
+
+        .back-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: #ffd700;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #ffed4e;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #888;
+            text-align: center;
+        }
+
+        #game-over-screen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 15, 30, 0.98);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #ffd700;
+            z-index: 100;
+            text-align: center;
+            min-width: 350px;
+        }
+
+        #game-over-screen h2 {
+            color: #ff4444;
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(255, 68, 68, 0.8);
+        }
+
+        #game-over-screen p {
+            font-size: 20px;
+            margin: 10px 0;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Main Menu -->
+        <div id="menu">
+            <h1>3D PAC-MAN</h1>
+            <div class="subtitle">polsoft.ITS™ Edition</div>
+            <button class="menu-btn" onclick="startNewGame()">New Game</button>
+            <button class="menu-btn" onclick="showTop5()">Top 5</button>
+            <button class="menu-btn" onclick="showHelp()">Help</button>
+            <button class="menu-btn" onclick="quitGame()">Quit</button>
+        </div>
+
+        <!-- Game Area -->
+        <div id="game-area">
+            <div id="game-header">
+                <div class="score-display">Score: <span id="score">0</span></div>
+                <div class="score-display">Lives: <span id="lives">3</span></div>
+                <div class="score-display">Level: <span id="level">1</span></div>
+                <button id="fullscreen-btn" class="fullscreen-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">
+                    <span id="fullscreen-icon">⛶</span>
+                </button>
+            </div>
+            <div id="canvas-container">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Top 5 Screen -->
+        <div id="top5-screen">
+            <h2>🏆 TOP 5 HIGH SCORES 🏆</h2>
+            <ul class="top5-list" id="top5-list"></ul>
+            <button class="back-btn" onclick="hideTop5()">Back to Menu</button>
+        </div>
+
+        <!-- Help Screen -->
+        <div id="help-screen">
+            <h2>❓ HELP</h2>
+            <div class="help-content">
+                <h3>How to Play:</h3>
+                <ul>
+                    <li>Use <strong>Arrow Keys</strong> or <strong>WASD</strong> to move Pac-Man</li>
+                    <li>Eat all the dots to complete the level</li>
+                    <li>Avoid the ghosts or you'll lose a life</li>
+                    <li>Eat power pellets (big dots) to turn ghosts blue</li>
+                    <li>Eat blue ghosts for bonus points!</li>
+                </ul>
+                <h3>Scoring:</h3>
+                <ul>
+                    <li>Small dot: 10 points</li>
+                    <li>Power pellet: 50 points</li>
+                    <li>Ghost (when blue): 200 points</li>
+                </ul>
+                <h3>Game Info:</h3>
+                <p>Created with modern 3D graphics and smooth animations. Your high scores are automatically saved locally.</p>
+            </div>
+            <button class="back-btn" onclick="hideHelp()">Back to Menu</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen">
+            <h2>GAME OVER!</h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <p id="high-score-msg"></p>
+            <button class="menu-btn" onclick="startNewGame()">Play Again</button>
+            <button class="menu-btn" onclick="returnToMenu()">Main Menu</button>
+        </div>
+
+        <div class="footer">
+            polsoft.ITS™ London by Sebastian Januchowski<br>
+            2026© Sebastian Januchowski. All rights reserved.<br>
+            <a href="mailto:polsoft.its@fastservice.com" style="color: #888;">polsoft.its@fastservice.com</a> | 
+            <a href="https://github.com/seb07uk" style="color: #888;">github.com/seb07uk</a>
+        </div>
+    </div>
+
+    <script>
+        // Game Constants
+        const GRID_SIZE = 28;
+        const GRID_HEIGHT = 31;
+        let CELL_SIZE = 20;
+        let CANVAS_WIDTH = CELL_SIZE * GRID_SIZE;
+        let CANVAS_HEIGHT = CELL_SIZE * GRID_HEIGHT;
+        
+        // Game Variables
+        let canvas, ctx;
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let gameRunning = false;
+        let animationId;
+        
+        // Game Objects
+        let pacman = {
+            x: 10,
+            y: 10,
+            direction: 'right',
+            nextDirection: 'right',
+            mouthOpen: 0,
+            speed: 0.15
+        };
+        
+        let ghosts = [];
+        let dots = [];
+        let powerPellets = [];
+        let walls = [];
+        let powerMode = false;
+        let powerModeTimer = 0;
+        
+        // Particle system for visual effects
+        let particles = [];
+        let screenShake = 0;
+        
+        class Particle {
+            constructor(x, y, color, size, vx, vy, life) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = size;
+                this.vx = vx;
+                this.vy = vy;
+                this.life = life;
+                this.maxLife = life;
+                this.alpha = 1;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+                this.alpha = this.life / this.maxLife;
+                this.size *= 0.97;
+            }
+            
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+                gradient.addColorStop(0, this.color);
+                gradient.addColorStop(1, this.color + '00');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+        
+        function createParticles(x, y, color, count = 5) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 2 + 1;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                const size = Math.random() * 3 + 2;
+                const life = Math.random() * 20 + 10;
+                particles.push(new Particle(x, y, color, size, vx, vy, life));
+            }
+        }
+        
+        // Storage Helper
+        class GameStorage {
+            static STORAGE_KEY = 'pacman_game_data';
+            
+            static getStoragePath() {
+                // Simulate %userprofile%\.polsoft\games\PacManHtml.json
+                return this.STORAGE_KEY;
+            }
+            
+            static loadData() {
+                try {
+                    const data = localStorage.getItem(this.getStoragePath());
+                    return data ? JSON.parse(data) : this.getDefaultData();
+                } catch (e) {
+                    console.error('Error loading game data:', e);
+                    return this.getDefaultData();
+                }
+            }
+            
+            static saveData(data) {
+                try {
+                    localStorage.setItem(this.getStoragePath(), JSON.stringify(data));
+                    return true;
+                } catch (e) {
+                    console.error('Error saving game data:', e);
+                    return false;
+                }
+            }
+            
+            static getDefaultData() {
+                return {
+                    highScores: [],
+                    settings: {
+                        soundEnabled: true,
+                        difficulty: 'normal'
+                    },
+                    stats: {
+                        gamesPlayed: 0,
+                        totalScore: 0
+                    }
+                };
+            }
+            
+            static addHighScore(score) {
+                const data = this.loadData();
+                data.highScores.push({
+                    score: score,
+                    date: new Date().toISOString(),
+                    level: level
+                });
+                data.highScores.sort((a, b) => b.score - a.score);
+                data.highScores = data.highScores.slice(0, 5);
+                data.stats.gamesPlayed++;
+                data.stats.totalScore += score;
+                this.saveData(data);
+                return data.highScores[0].score === score && data.highScores.length > 0;
+            }
+            
+            static getHighScores() {
+                return this.loadData().highScores;
+            }
+        }
+        
+        // Initialize
+        window.onload = function() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            loadTop5();
+        };
+        
+        // Resize canvas to fit window
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            const maxSize = Math.min(container.clientWidth, container.clientHeight) * 0.95;
+            
+            const aspectRatio = GRID_SIZE / GRID_HEIGHT;
+            let width, height;
+            
+            if (aspectRatio > 1) {
+                width = maxSize;
+                height = maxSize / aspectRatio;
+            } else {
+                height = maxSize;
+                width = maxSize * aspectRatio;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            CELL_SIZE = width / GRID_SIZE;
+        }
+        
+        window.addEventListener('resize', () => {
+            if (gameRunning) {
+                resizeCanvas();
+            }
+        });
+        
+        // Fullscreen functionality
+        function toggleFullscreen() {
+            const elem = document.documentElement;
+            
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement && !document.msFullscreenElement) {
+                // Enter fullscreen
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.mozRequestFullScreen) {
+                    elem.mozRequestFullScreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+        
+        // Update fullscreen button icon
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+        document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+        
+        function updateFullscreenButton() {
+            const icon = document.getElementById('fullscreen-icon');
+            const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || 
+                                document.mozFullScreenElement || document.msFullscreenElement;
+            
+            if (icon) {
+                icon.textContent = isFullscreen ? '⛶' : '⛶';
+                document.getElementById('fullscreen-btn').title = isFullscreen ? 'Exit Fullscreen (ESC)' : 'Enter Fullscreen';
+            }
+            
+            // Resize canvas when entering/exiting fullscreen
+            if (gameRunning) {
+                setTimeout(resizeCanvas, 100);
+            }
+        }
+        
+        // F11 key alternative for fullscreen
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+        });
+        
+        // Menu Functions
+        function startNewGame() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('game-area').style.display = 'flex';
+            document.getElementById('game-over-screen').style.display = 'none';
+            
+            score = 0;
+            lives = 3;
+            level = 1;
+            updateDisplay();
+            
+            initGame();
+            gameRunning = true;
+            gameLoop();
+        }
+        
+        function showTop5() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('top5-screen').style.display = 'block';
+            loadTop5();
+        }
+        
+        function hideTop5() {
+            document.getElementById('top5-screen').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+        }
+        
+        function showHelp() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('help-screen').style.display = 'block';
+        }
+        
+        function hideHelp() {
+            document.getElementById('help-screen').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+        }
+        
+        function quitGame() {
+            if (confirm('Are you sure you want to quit?')) {
+                window.close();
+            }
+        }
+        
+        function returnToMenu() {
+            gameRunning = false;
+            if (animationId) cancelAnimationFrame(animationId);
+            document.getElementById('game-area').style.display = 'none';
+            document.getElementById('game-over-screen').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+        }
+        
+        function loadTop5() {
+            const scores = GameStorage.getHighScores();
+            const list = document.getElementById('top5-list');
+            list.innerHTML = '';
+            
+            if (scores.length === 0) {
+                list.innerHTML = '<li class="top5-item" style="justify-content: center;">No scores yet!</li>';
+                return;
+            }
+            
+            scores.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'top5-item';
+                const date = new Date(item.date).toLocaleDateString();
+                li.innerHTML = `
+                    <span class="top5-rank">#${index + 1}</span>
+                    <span class="top5-score">${item.score} pts (Level ${item.level}) - ${date}</span>
+                `;
+                list.appendChild(li);
+            });
+        }
+        
+        // Game Initialization
+        function initGame() {
+            resizeCanvas();
+            
+            // Reset game objects - starting position in bottom corridor (line 29, left side)
+            pacman = {
+                x: 1,
+                y: 29,
+                direction: 'right',
+                nextDirection: 'right',
+                mouthOpen: 0,
+                speed: 0.15
+            };
+            
+            ghosts = [
+                { x: 12, y: 14, color: '#ff0000', direction: 'left', scared: false, name: 'Blinky', released: true },
+                { x: 14, y: 14, color: '#ffb8ff', direction: 'up', scared: false, name: 'Pinky', released: false, releaseTimer: 100 },
+                { x: 13, y: 13, color: '#00ffff', direction: 'up', scared: false, name: 'Inky', released: false, releaseTimer: 200 },
+                { x: 15, y: 14, color: '#ffb852', direction: 'up', scared: false, name: 'Clyde', released: false, releaseTimer: 300 }
+            ];
+            
+            walls = generateWalls();
+            dots = generateDots();
+            powerPellets = [
+                {x: 1, y: 3},
+                {x: 26, y: 3},
+                {x: 1, y: 23},
+                {x: 26, y: 23}
+            ];
+            
+            powerMode = false;
+            powerModeTimer = 0;
+        }
+        
+        function generateWalls() {
+            // Original Pac-Man maze layout (28x31 grid)
+            const maze = [
+                "############################",
+                "#............##............#",
+                "#.####.#####.##.#####.####.#",
+                "#o####.#####.##.#####.####o#",
+                "#.####.#####.##.#####.####.#",
+                "#..........................#",
+                "#.####.##.########.##.####.#",
+                "#.####.##.########.##.####.#",
+                "#......##....##....##......#",
+                "######.##### ## #####.######",
+                "######.##### ## #####.######",
+                "######.##          ##.######",
+                "######.## ###--### ##.######",
+                "######.## #      # ##.######",
+                "      .   #      #   .      ",
+                "######.## #      # ##.######",
+                "######.## ######## ##.######",
+                "######.##          ##.######",
+                "######.## ######## ##.######",
+                "######.## ######## ##.######",
+                "#............##............#",
+                "#.####.#####.##.#####.####.#",
+                "#.####.#####.##.#####.####.#",
+                "#o..##................##..o#",
+                "###.##.##.########.##.##.###",
+                "###.##.##.########.##.##.###",
+                "#......##....##....##......#",
+                "#.##########.##.##########.#",
+                "#.##########.##.##########.#",
+                "#..........................#",
+                "############################"
+            ];
+            
+            let walls = [];
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    if (maze[y][x] === '#') {
+                        walls.push({x: x, y: y});
+                    }
+                }
+            }
+            return walls;
+        }
+        
+        function generateDots() {
+            const maze = [
+                "############################",
+                "#............##............#",
+                "#.####.#####.##.#####.####.#",
+                "#o####.#####.##.#####.####o#",
+                "#.####.#####.##.#####.####.#",
+                "#..........................#",
+                "#.####.##.########.##.####.#",
+                "#.####.##.########.##.####.#",
+                "#......##....##....##......#",
+                "######.##### ## #####.######",
+                "######.##### ## #####.######",
+                "######.##          ##.######",
+                "######.## ###--### ##.######",
+                "######.## #      # ##.######",
+                "      .   #      #   .      ",
+                "######.## #      # ##.######",
+                "######.## ######## ##.######",
+                "######.##          ##.######",
+                "######.## ######## ##.######",
+                "######.## ######## ##.######",
+                "#............##............#",
+                "#.####.#####.##.#####.####.#",
+                "#.####.#####.##.#####.####.#",
+                "#o..##................##..o#",
+                "###.##.##.########.##.##.###",
+                "###.##.##.########.##.##.###",
+                "#......##....##....##......#",
+                "#.##########.##.##########.#",
+                "#.##########.##.##########.#",
+                "#..........................#",
+                "############################"
+            ];
+            
+            let dots = [];
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    if (maze[y][x] === '.') {
+                        dots.push({x, y});
+                    }
+                }
+            }
+            return dots;
+        }
+        
+        function isPowerPelletPosition(x, y) {
+            const positions = [[1, 3], [26, 3], [1, 23], [26, 23]];
+            return positions.some(pos => pos[0] === x && pos[1] === y);
+        }
+        
+        function isWall(x, y) {
+            // Simple center-based collision
+            const gridX = Math.floor(x);
+            const gridY = Math.floor(y);
+            
+            return walls.some(wall => wall.x === gridX && wall.y === gridY);
+        }
+        
+        // Input Handling
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+            
+            const key = e.key.toLowerCase();
+            if (key === 'arrowup' || key === 'w') pacman.nextDirection = 'up';
+            else if (key === 'arrowdown' || key === 's') pacman.nextDirection = 'down';
+            else if (key === 'arrowleft' || key === 'a') pacman.nextDirection = 'left';
+            else if (key === 'arrowright' || key === 'd') pacman.nextDirection = 'right';
+            
+            e.preventDefault();
+        });
+        
+        // Game Loop
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            update();
+            draw();
+            
+            animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        function update() {
+            // Update particles
+            particles = particles.filter(p => {
+                p.update();
+                return p.life > 0;
+            });
+            
+            // Decay screen shake
+            if (screenShake > 0) {
+                screenShake *= 0.9;
+                if (screenShake < 0.1) screenShake = 0;
+            }
+            
+            // Create Pac-Man trail particles
+            if (Math.random() < 0.3) {
+                const px = pacman.x * CELL_SIZE + CELL_SIZE / 2;
+                const py = pacman.y * CELL_SIZE + CELL_SIZE / 2;
+                createParticles(px, py, '#ffff00', 1);
+            }
+            
+            // Try to change direction
+            if (canMove(pacman.x, pacman.y, pacman.nextDirection)) {
+                pacman.direction = pacman.nextDirection;
+            }
+            
+            // Move Pac-Man
+            if (canMove(pacman.x, pacman.y, pacman.direction)) {
+                const moveAmount = pacman.speed;
+                if (pacman.direction === 'up') pacman.y -= moveAmount;
+                else if (pacman.direction === 'down') pacman.y += moveAmount;
+                else if (pacman.direction === 'left') pacman.x -= moveAmount;
+                else if (pacman.direction === 'right') pacman.x += moveAmount;
+                
+                // Wrap around (horizontal tunnels)
+                if (pacman.x < 0) pacman.x = GRID_SIZE - 1;
+                if (pacman.x >= GRID_SIZE) pacman.x = 0;
+                if (pacman.y < 0) pacman.y = GRID_HEIGHT - 1;
+                if (pacman.y >= GRID_HEIGHT) pacman.y = 0;
+                
+                pacman.mouthOpen = (pacman.mouthOpen + 0.2) % (Math.PI * 2);
+            }
+            
+            // Check dot collision
+            const px = Math.floor(pacman.x);
+            const py = Math.floor(pacman.y);
+            
+            dots = dots.filter(dot => {
+                if (dot.x === px && dot.y === py) {
+                    score += 10;
+                    updateDisplay();
+                    // Create particles when eating dot
+                    const dotX = dot.x * CELL_SIZE + CELL_SIZE / 2;
+                    const dotY = dot.y * CELL_SIZE + CELL_SIZE / 2;
+                    createParticles(dotX, dotY, '#ffd700', 3);
+                    return false;
+                }
+                return true;
+            });
+            
+            // Check power pellet collision
+            powerPellets = powerPellets.filter(pellet => {
+                if (pellet.x === px && pellet.y === py) {
+                    score += 50;
+                    activatePowerMode();
+                    updateDisplay();
+                    // Create explosion of particles when eating power pellet
+                    const pelletX = pellet.x * CELL_SIZE + CELL_SIZE / 2;
+                    const pelletY = pellet.y * CELL_SIZE + CELL_SIZE / 2;
+                    createParticles(pelletX, pelletY, '#ffffff', 15);
+                    return false;
+                }
+                return true;
+            });
+            
+            // Power mode timer
+            if (powerMode) {
+                powerModeTimer--;
+                if (powerModeTimer <= 0) {
+                    powerMode = false;
+                    ghosts.forEach(ghost => ghost.scared = false);
+                }
+            }
+            
+            // Release ghosts from ghost house
+            ghosts.forEach((ghost, index) => {
+                if (!ghost.released) {
+                    ghost.releaseTimer--;
+                    
+                    if (ghost.releaseTimer <= 0) {
+                        // Move ghost up out of ghost house
+                        if (ghost.y > 11.5) {
+                            ghost.y -= 0.1;
+                            ghost.direction = 'up';
+                        } else {
+                            // Ghost is out, now can move freely
+                            ghost.released = true;
+                            // Move to exit position
+                            if (ghost.x < 14) {
+                                ghost.direction = 'right';
+                            } else if (ghost.x > 14) {
+                                ghost.direction = 'left';
+                            } else {
+                                ghost.direction = 'left';
+                            }
+                        }
+                    } else {
+                        // Bounce up and down in ghost house while waiting
+                        const bounceSpeed = 0.05;
+                        if (!ghost.bounceUp) ghost.bounceUp = true;
+                        
+                        if (ghost.bounceUp) {
+                            ghost.y -= bounceSpeed;
+                            if (ghost.y < 13.5) ghost.bounceUp = false;
+                        } else {
+                            ghost.y += bounceSpeed;
+                            if (ghost.y > 14.5) ghost.bounceUp = true;
+                        }
+                    }
+                }
+            });
+            
+            // Move ghosts with improved AI
+            ghosts.forEach((ghost, index) => {
+                // Only move ghosts that have been released from ghost house
+                if (!ghost.released) return;
+                
+                const currentX = Math.floor(ghost.x);
+                const currentY = Math.floor(ghost.y);
+                
+                // Check if ghost is at a grid intersection (decision point)
+                const atIntersectionX = Math.abs(ghost.x - currentX) < 0.15;
+                const atIntersectionY = Math.abs(ghost.y - currentY) < 0.15;
+                const atIntersection = atIntersectionX && atIntersectionY;
+                
+                // Make decision at intersections
+                if (atIntersection) {
+                    // Get valid directions (not walls)
+                    const possibleDirections = [];
+                    const directions = [
+                        { dir: 'up', dx: 0, dy: -1 },
+                        { dir: 'down', dx: 0, dy: 1 },
+                        { dir: 'left', dx: -1, dy: 0 },
+                        { dir: 'right', dx: 1, dy: 0 }
+                    ];
+                    
+                    // Opposite directions to prevent immediate reversal
+                    const opposites = {
+                        'up': 'down',
+                        'down': 'up',
+                        'left': 'right',
+                        'right': 'left'
+                    };
+                    
+                    // Find all valid directions (not walls, not opposite)
+                    directions.forEach(d => {
+                        const newX = currentX + d.dx;
+                        const newY = currentY + d.dy;
+                        
+                        if (!isWall(newX, newY) && d.dir !== opposites[ghost.direction]) {
+                            possibleDirections.push(d);
+                        }
+                    });
+                    
+                    // If stuck (no valid directions), allow going back
+                    if (possibleDirections.length === 0) {
+                        directions.forEach(d => {
+                            const newX = currentX + d.dx;
+                            const newY = currentY + d.dy;
+                            if (!isWall(newX, newY)) {
+                                possibleDirections.push(d);
+                            }
+                        });
+                    }
+                    
+                    // Choose direction based on ghost behavior
+                    if (possibleDirections.length > 0) {
+                        const pacX = Math.floor(pacman.x);
+                        const pacY = Math.floor(pacman.y);
+                        
+                        if (ghost.scared) {
+                            // Scared: run away from Pac-Man
+                            const distances = possibleDirections.map(d => {
+                                const newX = currentX + d.dx;
+                                const newY = currentY + d.dy;
+                                return {
+                                    dir: d.dir,
+                                    dist: Math.sqrt(Math.pow(newX - pacX, 2) + Math.pow(newY - pacY, 2))
+                                };
+                            });
+                            distances.sort((a, b) => b.dist - a.dist);
+                            ghost.direction = distances[0].dir;
+                            
+                        } else if (index === 0) {
+                            // Blinky (red) - chase Pac-Man directly
+                            const distances = possibleDirections.map(d => {
+                                const newX = currentX + d.dx;
+                                const newY = currentY + d.dy;
+                                return {
+                                    dir: d.dir,
+                                    dist: Math.sqrt(Math.pow(newX - pacX, 2) + Math.pow(newY - pacY, 2))
+                                };
+                            });
+                            distances.sort((a, b) => a.dist - b.dist);
+                            ghost.direction = distances[0].dir;
+                            
+                        } else if (index === 1) {
+                            // Pinky (pink) - ambush ahead of Pac-Man
+                            let targetX = pacX;
+                            let targetY = pacY;
+                            if (pacman.direction === 'up') targetY -= 4;
+                            else if (pacman.direction === 'down') targetY += 4;
+                            else if (pacman.direction === 'left') targetX -= 4;
+                            else if (pacman.direction === 'right') targetX += 4;
+                            
+                            const distances = possibleDirections.map(d => {
+                                const newX = currentX + d.dx;
+                                const newY = currentY + d.dy;
+                                return {
+                                    dir: d.dir,
+                                    dist: Math.sqrt(Math.pow(newX - targetX, 2) + Math.pow(newY - targetY, 2))
+                                };
+                            });
+                            distances.sort((a, b) => a.dist - b.dist);
+                            ghost.direction = distances[0].dir;
+                            
+                        } else if (index === 2) {
+                            // Inky (cyan) - mix of chase and random
+                            if (Math.random() < 0.6) {
+                                const distances = possibleDirections.map(d => {
+                                    const newX = currentX + d.dx;
+                                    const newY = currentY + d.dy;
+                                    return {
+                                        dir: d.dir,
+                                        dist: Math.sqrt(Math.pow(newX - pacX, 2) + Math.pow(newY - pacY, 2))
+                                    };
+                                });
+                                distances.sort((a, b) => a.dist - b.dist);
+                                ghost.direction = distances[0].dir;
+                            } else {
+                                ghost.direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)].dir;
+                            }
+                            
+                        } else {
+                            // Clyde (orange) - shy, runs when close
+                            const dist = Math.sqrt(Math.pow(currentX - pacX, 2) + Math.pow(currentY - pacY, 2));
+                            if (dist < 8) {
+                                const distances = possibleDirections.map(d => {
+                                    const newX = currentX + d.dx;
+                                    const newY = currentY + d.dy;
+                                    return {
+                                        dir: d.dir,
+                                        dist: Math.sqrt(Math.pow(newX - pacX, 2) + Math.pow(newY - pacY, 2))
+                                    };
+                                });
+                                distances.sort((a, b) => b.dist - a.dist);
+                                ghost.direction = distances[0].dir;
+                            } else {
+                                ghost.direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)].dir;
+                            }
+                        }
+                    }
+                }
+                
+                // Always move ghost in current direction
+                const speed = ghost.scared ? 0.08 : 0.1;
+                let newX = ghost.x;
+                let newY = ghost.y;
+                
+                if (ghost.direction === 'up') newY -= speed;
+                else if (ghost.direction === 'down') newY += speed;
+                else if (ghost.direction === 'left') newX -= speed;
+                else if (ghost.direction === 'right') newX += speed;
+                
+                // Check if new position is valid (not in wall)
+                if (!isWall(newX, newY)) {
+                    ghost.x = newX;
+                    ghost.y = newY;
+                    
+                    // Wrap around horizontal tunnel
+                    if (ghost.x < 0) ghost.x = GRID_SIZE - 1;
+                    if (ghost.x >= GRID_SIZE) ghost.x = 0;
+                } else {
+                    // If hit a wall, snap to grid center for next decision
+                    ghost.x = Math.round(ghost.x * 2) / 2; // Snap to 0.5 grid
+                    ghost.y = Math.round(ghost.y * 2) / 2;
+                }
+            });
+            
+            // Check ghost collision
+            ghosts.forEach((ghost, index) => {
+                const dist = Math.sqrt(
+                    Math.pow(ghost.x - pacman.x, 2) + 
+                    Math.pow(ghost.y - pacman.y, 2)
+                );
+                
+                if (dist < 0.5) {
+                    if (ghost.scared) {
+                        score += 200;
+                        // Create ghost explosion particles
+                        const ghostX = ghost.x * CELL_SIZE + CELL_SIZE / 2;
+                        const ghostY = ghost.y * CELL_SIZE + CELL_SIZE / 2;
+                        createParticles(ghostX, ghostY, '#4444ff', 20);
+                        
+                        // Send ghost back to ghost house
+                        ghost.x = 13 + (index % 2);
+                        ghost.y = 14;
+                        ghost.scared = false;
+                        ghost.released = false;
+                        ghost.releaseTimer = 150; // Time to wait before leaving again
+                        ghost.direction = 'up';
+                        updateDisplay();
+                    } else {
+                        loseLife();
+                    }
+                }
+            });
+            
+            // Check level complete
+            if (dots.length === 0 && powerPellets.length === 0) {
+                nextLevel();
+            }
+        }
+        
+        function canMove(x, y, direction) {
+            let newX = x;
+            let newY = y;
+            const moveAmount = 0.15; // Increased for testing
+            
+            if (direction === 'up') newY -= moveAmount;
+            else if (direction === 'down') newY += moveAmount;
+            else if (direction === 'left') newX -= moveAmount;
+            else if (direction === 'right') newX += moveAmount;
+            
+            return !isWall(newX, newY);
+        }
+        
+        function activatePowerMode() {
+            powerMode = true;
+            powerModeTimer = 300; // 5 seconds at 60fps
+            ghosts.forEach(ghost => ghost.scared = true);
+        }
+        
+        function loseLife() {
+            lives--;
+            updateDisplay();
+            
+            // Trigger screen shake effect
+            screenShake = 15;
+            
+            // Create explosion particles at Pac-Man position
+            const px = pacman.x * CELL_SIZE + CELL_SIZE / 2;
+            const py = pacman.y * CELL_SIZE + CELL_SIZE / 2;
+            createParticles(px, py, '#ff0000', 30);
+            
+            if (lives <= 0) {
+                gameOver();
+            } else {
+                // Reset positions
+                pacman.x = 1;
+                pacman.y = 29;
+                pacman.direction = 'right';
+                pacman.nextDirection = 'right';
+                
+                // Reset ghosts to ghost house with staggered release
+                ghosts.forEach((ghost, i) => {
+                    ghost.x = 12 + (i % 2) * 2 + Math.floor(i / 2);
+                    ghost.y = 14;
+                    ghost.scared = false;
+                    ghost.direction = 'up';
+                    
+                    // Blinky is always released, others wait
+                    if (i === 0) {
+                        ghost.released = true;
+                    } else {
+                        ghost.released = false;
+                        ghost.releaseTimer = 100 + (i * 100);
+                    }
+                });
+                
+                powerMode = false;
+                powerModeTimer = 0;
+            }
+        }
+        
+        function nextLevel() {
+            level++;
+            updateDisplay();
+            initGame();
+            pacman.speed += 0.02;
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            if (animationId) cancelAnimationFrame(animationId);
+            
+            const isHighScore = GameStorage.addHighScore(score);
+            
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('high-score-msg').textContent = 
+                isHighScore ? '🎉 NEW HIGH SCORE! 🎉' : '';
+            document.getElementById('game-over-screen').style.display = 'block';
+            
+            loadTop5();
+        }
+        
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+            document.getElementById('level').textContent = level;
+        }
+        
+        // Drawing Functions
+        function draw() {
+            // Apply screen shake
+            ctx.save();
+            if (screenShake > 0) {
+                const shakeX = (Math.random() - 0.5) * screenShake;
+                const shakeY = (Math.random() - 0.5) * screenShake;
+                ctx.translate(shakeX, shakeY);
+            }
+            
+            // Clear canvas with gradient background
+            const bgGradient = ctx.createRadialGradient(
+                canvas.width / 2, 
+                canvas.height / 2, 
+                0,
+                canvas.width / 2, 
+                canvas.height / 2, 
+                Math.max(canvas.width, canvas.height) / 2
+            );
+            bgGradient.addColorStop(0, '#0a0a1a');
+            bgGradient.addColorStop(1, '#000000');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Subtle grid pattern for depth
+            ctx.strokeStyle = 'rgba(20, 20, 40, 0.3)';
+            ctx.lineWidth = 0.5;
+            for (let x = 0; x < GRID_SIZE; x++) {
+                ctx.beginPath();
+                ctx.moveTo(x * CELL_SIZE, 0);
+                ctx.lineTo(x * CELL_SIZE, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < GRID_HEIGHT; y++) {
+                ctx.beginPath();
+                ctx.moveTo(0, y * CELL_SIZE);
+                ctx.lineTo(canvas.width, y * CELL_SIZE);
+                ctx.stroke();
+            }
+            
+            // Draw walls with advanced neon 3D effect
+            const wallPulse = Math.sin(Date.now() / 500) * 0.2 + 0.8;
+            
+            walls.forEach(wall => {
+                const x = wall.x * CELL_SIZE;
+                const y = wall.y * CELL_SIZE;
+                
+                // Outer neon glow
+                ctx.shadowColor = `rgba(59, 130, 246, ${0.8 * wallPulse})`;
+                ctx.shadowBlur = CELL_SIZE * 0.5;
+                
+                // Create radial gradient for 3D rounded effect
+                const gradient = ctx.createRadialGradient(
+                    x + CELL_SIZE * 0.3, 
+                    y + CELL_SIZE * 0.3, 
+                    CELL_SIZE * 0.1,
+                    x + CELL_SIZE / 2, 
+                    y + CELL_SIZE / 2, 
+                    CELL_SIZE * 0.8
+                );
+                gradient.addColorStop(0, `rgba(100, 180, 255, ${wallPulse})`);
+                gradient.addColorStop(0.4, `rgba(59, 130, 246, ${0.9 * wallPulse})`);
+                gradient.addColorStop(0.7, '#2563eb');
+                gradient.addColorStop(1, '#1e40af');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                
+                ctx.shadowBlur = 0;
+                
+                // Inner border glow
+                ctx.strokeStyle = `rgba(147, 197, 253, ${0.6 * wallPulse})`;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+                
+                // Top highlight for 3D effect
+                const highlightGradient = ctx.createLinearGradient(x, y, x, y + CELL_SIZE * 0.4);
+                highlightGradient.addColorStop(0, `rgba(191, 219, 254, ${0.5 * wallPulse})`);
+                highlightGradient.addColorStop(1, 'rgba(191, 219, 254, 0)');
+                ctx.fillStyle = highlightGradient;
+                ctx.fillRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE * 0.4);
+                
+                // Corner highlights with pulse
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.4 * wallPulse})`;
+                ctx.beginPath();
+                ctx.arc(x + CELL_SIZE * 0.25, y + CELL_SIZE * 0.25, CELL_SIZE * 0.15, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Bottom shadow for depth
+                const shadowGradient = ctx.createLinearGradient(x, y + CELL_SIZE * 0.6, x, y + CELL_SIZE);
+                shadowGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                shadowGradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
+                ctx.fillStyle = shadowGradient;
+                ctx.fillRect(x + 2, y + CELL_SIZE * 0.6, CELL_SIZE - 4, CELL_SIZE * 0.4);
+            });
+            
+            // Draw particles
+            particles.forEach(p => p.draw(ctx));
+            
+            // Draw dots with animated glow
+            const glowPulse = Math.sin(Date.now() / 300) * 0.3 + 0.7;
+            dots.forEach(dot => {
+                const dotX = dot.x * CELL_SIZE + CELL_SIZE / 2;
+                const dotY = dot.y * CELL_SIZE + CELL_SIZE / 2;
+                const dotRadius = CELL_SIZE * 0.12;
+                
+                // Outer glow
+                const glowGradient = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, dotRadius * 3);
+                glowGradient.addColorStop(0, `rgba(255, 215, 0, ${0.6 * glowPulse})`);
+                glowGradient.addColorStop(0.5, `rgba(255, 215, 0, ${0.3 * glowPulse})`);
+                glowGradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+                
+                ctx.fillStyle = glowGradient;
+                ctx.beginPath();
+                ctx.arc(dotX, dotY, dotRadius * 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Main dot with gradient
+                const dotGradient = ctx.createRadialGradient(
+                    dotX - dotRadius * 0.3, 
+                    dotY - dotRadius * 0.3, 
+                    0,
+                    dotX, 
+                    dotY, 
+                    dotRadius
+                );
+                dotGradient.addColorStop(0, '#fff8dc');
+                dotGradient.addColorStop(0.5, '#ffd700');
+                dotGradient.addColorStop(1, '#daa520');
+                
+                ctx.fillStyle = dotGradient;
+                ctx.beginPath();
+                ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Specular highlight
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.beginPath();
+                ctx.arc(dotX - dotRadius * 0.3, dotY - dotRadius * 0.3, dotRadius * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Draw power pellets with intense animated glow
+            const powerPulse = Math.sin(Date.now() / 200) * 0.5 + 0.5;
+            const powerRotation = Date.now() / 1000;
+            
+            powerPellets.forEach(pellet => {
+                const x = pellet.x * CELL_SIZE + CELL_SIZE / 2;
+                const y = pellet.y * CELL_SIZE + CELL_SIZE / 2;
+                const radius = CELL_SIZE * 0.25;
+                
+                // Outer expanding ring
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 * (1 - powerPulse)})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(x, y, radius * (2 + powerPulse), 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Multi-layer glow
+                for (let i = 3; i > 0; i--) {
+                    const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, radius * (i + 1));
+                    glowGradient.addColorStop(0, `rgba(255, 255, 255, ${0.8 * powerPulse})`);
+                    glowGradient.addColorStop(0.3, `rgba(255, 215, 0, ${0.6 * powerPulse})`);
+                    glowGradient.addColorStop(0.7, `rgba(255, 165, 0, ${0.3 * powerPulse})`);
+                    glowGradient.addColorStop(1, 'rgba(255, 140, 0, 0)');
+                    
+                    ctx.fillStyle = glowGradient;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius * (i + 1), 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Rotating star effect
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(powerRotation);
+                
+                for (let i = 0; i < 8; i++) {
+                    ctx.rotate(Math.PI / 4);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * powerPulse})`;
+                    ctx.fillRect(-radius * 0.15, -radius * 1.5, radius * 0.3, radius);
+                }
+                ctx.restore();
+                
+                // Main pellet with 3D gradient
+                const pelletGradient = ctx.createRadialGradient(
+                    x - radius * 0.4, 
+                    y - radius * 0.4, 
+                    0,
+                    x, 
+                    y, 
+                    radius
+                );
+                pelletGradient.addColorStop(0, '#ffffff');
+                pelletGradient.addColorStop(0.3, '#ffff00');
+                pelletGradient.addColorStop(0.6, '#ffd700');
+                pelletGradient.addColorStop(1, '#ff8c00');
+                
+                ctx.fillStyle = pelletGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Specular highlight
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.beginPath();
+                ctx.arc(x - radius * 0.4, y - radius * 0.4, radius * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Inner shine
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.beginPath();
+                ctx.arc(x - radius * 0.2, y - radius * 0.2, radius * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Draw Pac-Man with enhanced 3D effect and glow
+            const px = pacman.x * CELL_SIZE + CELL_SIZE / 2;
+            const py = pacman.y * CELL_SIZE + CELL_SIZE / 2;
+            const radius = CELL_SIZE * 0.45;
+            
+            // Outer glow trail
+            const trailGradient = ctx.createRadialGradient(px, py, radius, px, py, radius * 2);
+            trailGradient.addColorStop(0, 'rgba(255, 255, 0, 0.4)');
+            trailGradient.addColorStop(0.5, 'rgba(255, 215, 0, 0.2)');
+            trailGradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+            ctx.fillStyle = trailGradient;
+            ctx.beginPath();
+            ctx.arc(px, py, radius * 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Shadow with blur
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = radius * 0.4;
+            ctx.shadowOffsetX = radius * 0.15;
+            ctx.shadowOffsetY = radius * 0.15;
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.arc(px + radius * 0.15, py + radius * 0.15, radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            // Pac-Man body with 3D gradient
+            const bodyGradient = ctx.createRadialGradient(
+                px - radius * 0.4, 
+                py - radius * 0.4, 
+                0,
+                px, 
+                py, 
+                radius * 1.2
+            );
+            bodyGradient.addColorStop(0, '#ffff80');
+            bodyGradient.addColorStop(0.4, '#ffff00');
+            bodyGradient.addColorStop(0.7, '#ffd700');
+            bodyGradient.addColorStop(1, '#daa520');
+            
+            ctx.fillStyle = bodyGradient;
+            ctx.beginPath();
+            
+            const mouthAngle = Math.abs(Math.sin(pacman.mouthOpen)) * 0.4;
+            let startAngle = mouthAngle;
+            let endAngle = Math.PI * 2 - mouthAngle;
+            
+            if (pacman.direction === 'right') {
+                startAngle = mouthAngle;
+                endAngle = Math.PI * 2 - mouthAngle;
+            } else if (pacman.direction === 'left') {
+                startAngle = Math.PI + mouthAngle;
+                endAngle = Math.PI - mouthAngle;
+            } else if (pacman.direction === 'up') {
+                startAngle = Math.PI * 1.5 + mouthAngle;
+                endAngle = Math.PI * 1.5 - mouthAngle;
+            } else if (pacman.direction === 'down') {
+                startAngle = Math.PI * 0.5 + mouthAngle;
+                endAngle = Math.PI * 0.5 - mouthAngle;
+            }
+            
+            ctx.arc(px, py, radius, startAngle, endAngle);
+            ctx.lineTo(px, py);
+            ctx.fill();
+            
+            // Outer rim for depth
+            ctx.strokeStyle = '#b8860b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(px, py, radius, startAngle, endAngle);
+            ctx.lineTo(px, py);
+            ctx.stroke();
+            
+            // Specular highlight
+            const highlightGradient = ctx.createRadialGradient(
+                px - radius * 0.5, 
+                py - radius * 0.5, 
+                0,
+                px - radius * 0.3, 
+                py - radius * 0.3, 
+                radius * 0.6
+            );
+            highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            highlightGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.4)');
+            highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            
+            ctx.fillStyle = highlightGradient;
+            ctx.beginPath();
+            ctx.arc(px - radius * 0.3, py - radius * 0.3, radius * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Eye
+            if (mouthAngle < 0.2) {
+                ctx.fillStyle = '#000';
+                let eyeX = px;
+                let eyeY = py - radius * 0.3;
+                
+                if (pacman.direction === 'right') {
+                    eyeX = px + radius * 0.3;
+                    eyeY = py - radius * 0.3;
+                } else if (pacman.direction === 'left') {
+                    eyeX = px - radius * 0.3;
+                    eyeY = py - radius * 0.3;
+                } else if (pacman.direction === 'up') {
+                    eyeX = px + radius * 0.1;
+                    eyeY = py - radius * 0.5;
+                } else if (pacman.direction === 'down') {
+                    eyeX = px + radius * 0.1;
+                    eyeY = py;
+                }
+                
+                ctx.beginPath();
+                ctx.arc(eyeX, eyeY, radius * 0.12, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Draw ghosts with enhanced 3D effect
+            ghosts.forEach(ghost => {
+                const gx = ghost.x * CELL_SIZE + CELL_SIZE / 2;
+                const gy = ghost.y * CELL_SIZE + CELL_SIZE / 2;
+                const ghostRadius = CELL_SIZE * 0.45;
+                
+                // Shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                ctx.beginPath();
+                ctx.arc(gx + ghostRadius * 0.15, gy + ghostRadius * 0.15, ghostRadius, 0, Math.PI);
+                ctx.fill();
+                
+                if (ghost.scared) {
+                    // Scared ghost effect with flashing
+                    const scaredPulse = Math.sin(Date.now() / 100) * 0.3 + 0.7;
+                    const isBlinking = powerModeTimer < 100 && Math.floor(Date.now() / 200) % 2 === 0;
+                    
+                    // Glowing aura when scared
+                    const scaredGlow = ctx.createRadialGradient(gx, gy, 0, gx, gy, ghostRadius * 2);
+                    scaredGlow.addColorStop(0, `rgba(100, 100, 255, ${0.4 * scaredPulse})`);
+                    scaredGlow.addColorStop(1, 'rgba(100, 100, 255, 0)');
+                    ctx.fillStyle = scaredGlow;
+                    ctx.beginPath();
+                    ctx.arc(gx, gy, ghostRadius * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Scared body color
+                    const scaredColor = isBlinking ? '#ffffff' : '#4444ff';
+                    const scaredGradient = ctx.createRadialGradient(
+                        gx - ghostRadius * 0.3, 
+                        gy - ghostRadius * 0.4, 
+                        0,
+                        gx, 
+                        gy, 
+                        ghostRadius * 1.2
+                    );
+                    scaredGradient.addColorStop(0, isBlinking ? '#ffffff' : '#8888ff');
+                    scaredGradient.addColorStop(0.6, scaredColor);
+                    scaredGradient.addColorStop(1, isBlinking ? '#cccccc' : '#2222aa');
+                    
+                    ctx.fillStyle = scaredGradient;
+                } else {
+                    // Normal ghost with 3D gradient
+                    const ghostGradient = ctx.createRadialGradient(
+                        gx - ghostRadius * 0.3, 
+                        gy - ghostRadius * 0.4, 
+                        0,
+                        gx, 
+                        gy, 
+                        ghostRadius * 1.2
+                    );
+                    
+                    // Create lighter and darker versions of ghost color
+                    const baseColor = ghost.color;
+                    ghostGradient.addColorStop(0, lightenColor(baseColor, 60));
+                    ghostGradient.addColorStop(0.6, baseColor);
+                    ghostGradient.addColorStop(1, darkenColor(baseColor, 40));
+                    
+                    ctx.fillStyle = ghostGradient;
+                    
+                    // Outer glow for each ghost
+                    const glowGradient = ctx.createRadialGradient(gx, gy, ghostRadius, gx, gy, ghostRadius * 1.5);
+                    glowGradient.addColorStop(0, `${baseColor}40`);
+                    glowGradient.addColorStop(1, `${baseColor}00`);
+                    ctx.fillStyle = glowGradient;
+                    ctx.beginPath();
+                    ctx.arc(gx, gy, ghostRadius * 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = ghostGradient;
+                }
+                
+                // Ghost body
+                ctx.beginPath();
+                ctx.arc(gx, gy - ghostRadius * 0.2, ghostRadius, Math.PI, 0);
+                
+                // Wavy bottom with animation
+                const waveOffset = Math.sin(Date.now() / 150 + ghost.x) * ghostRadius * 0.1;
+                const waves = 5;
+                for (let i = 0; i <= waves; i++) {
+                    const waveX = gx - ghostRadius + (i * (ghostRadius * 2) / waves);
+                    const waveY = gy + ghostRadius * 0.8 + (i % 2 === 0 ? waveOffset : -waveOffset);
+                    ctx.lineTo(waveX, waveY);
+                }
+                
+                ctx.lineTo(gx - ghostRadius, gy - ghostRadius * 0.2);
+                ctx.fill();
+                
+                // Outline for depth
+                ctx.strokeStyle = ghost.scared ? '#2222aa' : darkenColor(ghost.color, 60);
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                
+                // Eyes
+                if (!ghost.scared) {
+                    // White of eyes with gradient
+                    const eyeWhiteGradient = ctx.createRadialGradient(gx - ghostRadius * 0.25, gy - ghostRadius * 0.2, 0, gx - ghostRadius * 0.25, gy - ghostRadius * 0.2, ghostRadius * 0.25);
+                    eyeWhiteGradient.addColorStop(0, '#ffffff');
+                    eyeWhiteGradient.addColorStop(1, '#e0e0e0');
+                    
+                    ctx.fillStyle = eyeWhiteGradient;
+                    ctx.beginPath();
+                    ctx.arc(gx - ghostRadius * 0.25, gy - ghostRadius * 0.2, ghostRadius * 0.22, 0, Math.PI * 2);
+                    ctx.arc(gx + ghostRadius * 0.25, gy - ghostRadius * 0.2, ghostRadius * 0.22, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Pupils looking in direction of movement
+                    let pupilOffsetX = 0;
+                    let pupilOffsetY = 0;
+                    const pupilDistance = ghostRadius * 0.08;
+                    
+                    if (ghost.direction === 'right') pupilOffsetX = pupilDistance;
+                    else if (ghost.direction === 'left') pupilOffsetX = -pupilDistance;
+                    else if (ghost.direction === 'up') pupilOffsetY = -pupilDistance;
+                    else if (ghost.direction === 'down') pupilOffsetY = pupilDistance;
+                    
+                    ctx.fillStyle = '#1a1a3e';
+                    ctx.beginPath();
+                    ctx.arc(gx - ghostRadius * 0.25 + pupilOffsetX, gy - ghostRadius * 0.2 + pupilOffsetY, ghostRadius * 0.13, 0, Math.PI * 2);
+                    ctx.arc(gx + ghostRadius * 0.25 + pupilOffsetX, gy - ghostRadius * 0.2 + pupilOffsetY, ghostRadius * 0.13, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Pupil highlights
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(gx - ghostRadius * 0.25 + pupilOffsetX - ghostRadius * 0.04, gy - ghostRadius * 0.2 + pupilOffsetY - ghostRadius * 0.04, ghostRadius * 0.05, 0, Math.PI * 2);
+                    ctx.arc(gx + ghostRadius * 0.25 + pupilOffsetX - ghostRadius * 0.04, gy - ghostRadius * 0.2 + pupilOffsetY - ghostRadius * 0.04, ghostRadius * 0.05, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Scared face - zigzag mouth and worried eyes
+                    const mouthY = gy + ghostRadius * 0.1;
+                    const mouthWidth = ghostRadius * 0.6;
+                    const zigzags = 4;
+                    
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(gx - mouthWidth / 2, mouthY);
+                    for (let i = 0; i <= zigzags; i++) {
+                        const x = gx - mouthWidth / 2 + (i * mouthWidth / zigzags);
+                        const y = mouthY + (i % 2 === 0 ? 0 : ghostRadius * 0.15);
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                    
+                    // Simple scared eyes (dots)
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(gx - ghostRadius * 0.25, gy - ghostRadius * 0.2, ghostRadius * 0.1, 0, Math.PI * 2);
+                    ctx.arc(gx + ghostRadius * 0.25, gy - ghostRadius * 0.2, ghostRadius * 0.1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Specular highlight on top
+                const highlightGradient = ctx.createRadialGradient(
+                    gx - ghostRadius * 0.3, 
+                    gy - ghostRadius * 0.6, 
+                    0,
+                    gx - ghostRadius * 0.2, 
+                    gy - ghostRadius * 0.5, 
+                    ghostRadius * 0.5
+                );
+                highlightGradient.addColorStop(0, ghost.scared ? 'rgba(200, 200, 255, 0.5)' : 'rgba(255, 255, 255, 0.4)');
+                highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = highlightGradient;
+                ctx.beginPath();
+                ctx.arc(gx - ghostRadius * 0.2, gy - ghostRadius * 0.5, ghostRadius * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Add scanline effect for retro CRT look
+            ctx.globalAlpha = 0.05;
+            for (let i = 0; i < canvas.height; i += 3) {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, i, canvas.width, 1);
+            }
+            ctx.globalAlpha = 1;
+            
+            // Vignette effect
+            const vignetteGradient = ctx.createRadialGradient(
+                canvas.width / 2, 
+                canvas.height / 2, 
+                Math.min(canvas.width, canvas.height) * 0.3,
+                canvas.width / 2, 
+                canvas.height / 2, 
+                Math.min(canvas.width, canvas.height) * 0.8
+            );
+            vignetteGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            vignetteGradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
+            ctx.fillStyle = vignetteGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.restore(); // Restore after screen shake
+        }
+        
+        // Helper functions for color manipulation
+        function lightenColor(color, percent) {
+            const num = parseInt(color.replace("#",""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.min(255, (num >> 16) + amt);
+            const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+            const B = Math.min(255, (num & 0x0000FF) + amt);
+            return "#" + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+        
+        function darkenColor(color, percent) {
+            const num = parseInt(color.replace("#",""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.max(0, (num >> 16) - amt);
+            const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+            const B = Math.max(0, (num & 0x0000FF) - amt);
+            return "#" + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+    </script>
+</body>
+</html>
