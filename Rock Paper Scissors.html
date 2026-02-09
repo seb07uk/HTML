@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors - polsoft.ITS™</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --container-bg: white;
+            --text-main: #333;
+            --text-muted: #666;
+            --score-bg: #f8f9fa;
+            --highscore-bg: #f1f3f9;
+            --btn-text: white;
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --container-bg: #1f1f2e;
+            --text-main: #e0e0e0;
+            --text-muted: #aaa;
+            --score-bg: #2d2d44;
+            --highscore-bg: #252538;
+            --btn-text: white;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background 0.3s, color 0.3s;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-main);
+        }
+
+        /* ----- Panel Boczny Lewy (Gry) ----- */
+        .games-bar {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .game-link {
+            background: #f1c40f; /* Pac-Man Yellow */
+            color: #000 !important;
+            padding: 10px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 2px solid #000;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .game-link:hover {
+            transform: scale(1.1);
+            background: #ffdb3a;
+        }
+
+        /* ----- Panel Ustawień (Prawy) ----- */
+        .settings-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+            align-items: flex-end;
+        }
+
+        .setting-control {
+            background: var(--container-bg);
+            padding: 10px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #667eea;
+            font-size: 0.85em;
+            font-weight: bold;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        /* ----- Banner 3D ----- */
+        .banner3d {
+            font-family: 'Arial Black', Gadget, sans-serif;
+            text-align: center;
+            margin-bottom: 20px;
+            perspective: 1000px;
+            animation: bounce 2s infinite alternate;
+        }
+
+        .banner-text {
+            font-size: 4em;
+            color: #FFD700;
+            text-shadow: 
+                -2px -2px 0 #5f4a00, 2px -2px 0 #5f4a00, 
+                -2px 2px 0 #5f4a00, 2px 2px 0 #5f4a00,
+                3px 3px 0 #8d6b00, 4px 4px 0 #8d6b00,
+                5px 5px 0 #8d6b00, 6px 6px 0 #8d6b00,
+                10px 10px 20px rgba(0,0,0,0.7);
+            letter-spacing: 2px;
+            display: block;
+        }
+
+        .banner-icon {
+            display: block;
+            font-size: 1.2em;
+            margin-top: 10px;
+            filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.5));
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-10px) scale(1.02); }
+        }
+
+        /* ----- Kontener Gry ----- */
+        .container {
+            background: var(--container-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .author {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        
+        .score {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--score-bg);
+            border-radius: 10px;
+        }
+        
+        .score-item { text-align: center; }
+        .score-label { color: var(--text-muted); font-size: 0.9em; margin-bottom: 5px; }
+        .score-value { font-size: 2em; font-weight: bold; color: #667eea; }
+        
+        .choices {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .choice-btn {
+            background: var(--container-bg);
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 3em;
+        }
+        
+        .choice-btn:hover:not(:disabled) {
+            background: #667eea;
+            transform: scale(1.1);
+        }
+
+        .choice-btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+        
+        .result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        .result.win { background: #28a74544; color: #28a745; border: 1px solid #28a745; }
+        .result.lose { background: #dc354544; color: #dc3545; border: 1px solid #dc3545; }
+        .result.tie { background: #ffc10744; color: #ffc107; border: 1px solid #ffc107; }
+        
+        .reset-btn {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: var(--btn-text);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 10px;
+        }
+        
+        .reset-btn:hover { background: #764ba2; }
+
+        .highscore-board {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--highscore-bg);
+            border-radius: 10px;
+        }
+        .highscore-title {
+            text-align: center;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 10px;
+            border-bottom: 1px solid #555;
+        }
+        .highscore-list { list-style: none; font-size: 0.9em; }
+        .highscore-item { display: flex; justify-content: space-between; padding: 3px 0; }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-muted);
+            font-size: 0.8em;
+        }
+        .footer a { color: #667eea; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="games-bar">
+        <a href="Pac-Man.html" class="game-link" id="pacman-btn" title="Play 3D Pac-Man">
+            <span>🕹️</span> <span id="pacman-text">3D Pac-Man</span>
+        </a>
+    </div>
+
+    <div class="settings-bar">
+        <div class="setting-control" onclick="toggleTheme()">
+            <span id="theme-icon">🌙</span>
+            <span id="theme-text">Dark Mode</span>
+        </div>
+        <div class="setting-control" onclick="toggleLang()">
+            <span id="lang-flag">🇺🇸</span>
+            <span id="lang-text">EN</span>
+        </div>
+    </div>
+
+    <div class="banner3d">
+        <div class="banner-text">
+            <span>R</span><span>o</span><span>c</span><span>k</span> <span>P</span><span>a</span><span>p</span><span>e</span><span>r</span> <span>S</span><span>c</span><span>i</span><span>s</span><span>s</span><span>o</span><span>r</span><span>s</span>
+        </div>
+        <div class="banner-icon">🎮</div>
+    </div>
+
+    <div class="container">
+        <div class="author">
+            Author: Sebastian Januchowski<br>
+            polsoft.ITS™ London | 2026©
+        </div>
+        
+        <div class="score">
+            <div class="score-item">
+                <div class="score-label" id="lbl-you">You</div>
+                <div class="score-value" id="playerScore">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label" id="lbl-ties">Ties</div>
+                <div class="score-value" id="tieScore">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label" id="lbl-computer">Computer</div>
+                <div class="score-value" id="computerScore">0</div>
+            </div>
+        </div>
+        
+        <div class="choices" id="choicesRow">
+            <button class="choice-btn" onclick="play('rock')">🪨</button>
+            <button class="choice-btn" onclick="play('paper')">📄</button>
+            <button class="choice-btn" onclick="play('scissors')">✂️</button>
+        </div>
+        
+        <div class="result" id="result">
+            First to 10 points wins!
+        </div>
+        
+        <button class="reset-btn" id="btn-newgame" onclick="reset()">New Game</button>
+        <button class="reset-btn" id="btn-changename" style="background:#888" onclick="changeName()">Change Player</button>
+
+        <div class="highscore-board">
+            <div class="highscore-title" id="lbl-hstitle">🏆 TOP 5 HIGHSCORES</div>
+            <ul class="highscore-list" id="highscoreList"></ul>
+        </div>
+        
+        <div class="footer">
+            © 2026 Sebastian Januchowski. All rights reserved.<br>
+            GitHub: <a href="https://github.com/seb07uk" target="_blank">github.com/seb07uk</a>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            en: {
+                welcome: "Welcome! Please enter your name:",
+                you: "You",
+                ties: "Ties",
+                computer: "Computer",
+                startMsg: "First to 10 points wins!",
+                newGame: "New Game",
+                changePlayer: "Change Player",
+                hsTitle: "🏆 TOP 5 HIGHSCORES (Matches Won)",
+                noWins: "No wins yet!",
+                winPoint: "🎉 Point for you! {p} beats {c}",
+                losePoint: "😢 Point for Computer! {c} beats {p}",
+                tiePoint: "🤝 Tie! Both chose {p}",
+                matchWin: "⭐ <strong>{n} WINS THE MATCH!</strong> ⭐",
+                matchLose: "💀 <strong>COMPUTER WINS THE MATCH!</strong> 💀",
+                winsSuffix: "Wins",
+                enterName: "Enter new name:",
+                themeDark: "Dark Mode",
+                themeLight: "Light Mode",
+                pacman: "3D Pac-Man"
+            },
+            pl: {
+                welcome: "Witaj! Podaj swoje imię:",
+                you: "Ty",
+                ties: "Remisy",
+                computer: "Komputer",
+                startMsg: "Kto pierwszy zdobędzie 10 pkt - wygrywa!",
+                newGame: "Nowa Gra",
+                changePlayer: "Zmień Gracza",
+                hsTitle: "🏆 TOP 5 WYNIKÓW (Wygrane Mecze)",
+                noWins: "Brak wygranych!",
+                winPoint: "🎉 Punkt dla Ciebie! {p} bije {c}",
+                losePoint: "😢 Punkt dla Komputera! {c} bije {p}",
+                tiePoint: "🤝 Remis! Obaj wybrali {p}",
+                matchWin: "⭐ <strong>{n} WYGRYWA MECZ!</strong> ⭐",
+                matchLose: "💀 <strong>KOMPUTER WYGRYWA MECZ!</strong> 💀",
+                winsSuffix: "Wygranych",
+                enterName: "Podaj nowe imię:",
+                themeDark: "Tryb Ciemny",
+                themeLight: "Tryb Jasny",
+                pacman: "3D Pac-Man"
+            }
+        };
+
+        let currentLang = 'en';
+        let playerScore = 0;
+        let computerScore = 0;
+        let tieScore = 0;
+        let playerName = "";
+        let gameActive = true;
+        const WINNING_SCORE = 10;
+        
+        const choices = ['rock', 'paper', 'scissors'];
+        const emojis = { rock: '🪨', paper: '📄', scissors: '✂️' };
+
+        window.onload = () => {
+            initSettings();
+            loadName();
+            updateHighscoreDisplay();
+            updateUI();
+        };
+
+        function initSettings() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            currentLang = localStorage.getItem('language') || 'en';
+            updateThemeUI(savedTheme);
+            updateLangUI();
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeUI(newTheme);
+        }
+
+        function updateThemeUI(theme) {
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            const t = translations[currentLang];
+            icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+            text.textContent = theme === 'dark' ? t.themeLight : t.themeDark;
+        }
+
+        function toggleLang() {
+            currentLang = currentLang === 'en' ? 'pl' : 'en';
+            localStorage.setItem('language', currentLang);
+            updateLangUI();
+            updateUI();
+            updateHighscoreDisplay();
+            updateThemeUI(document.documentElement.getAttribute('data-theme'));
+        }
+
+        function updateLangUI() {
+            const flag = document.getElementById('lang-flag');
+            const text = document.getElementById('lang-text');
+            flag.textContent = currentLang === 'en' ? '🇺🇸' : '🇵🇱';
+            text.textContent = currentLang === 'en' ? 'EN' : 'PL';
+        }
+
+        function updateUI() {
+            const t = translations[currentLang];
+            document.getElementById('lbl-you').textContent = playerName || t.you;
+            document.getElementById('lbl-ties').textContent = t.ties;
+            document.getElementById('lbl-computer').textContent = t.computer;
+            document.getElementById('btn-newgame').textContent = t.newGame;
+            document.getElementById('btn-changename').textContent = t.changePlayer;
+            document.getElementById('lbl-hstitle').textContent = t.hsTitle;
+            document.getElementById('pacman-text').textContent = t.pacman;
+            
+            if (gameActive && playerScore === 0 && computerScore === 0) {
+                document.getElementById('result').textContent = t.startMsg;
+            }
+        }
+
+        function loadName() {
+            playerName = localStorage.getItem('rps_playerName');
+            if (!playerName) {
+                playerName = prompt(translations[currentLang].welcome, "Player 1") || "Guest";
+                localStorage.setItem('rps_playerName', playerName);
+            }
+        }
+
+        function changeName() {
+            const newName = prompt(translations[currentLang].enterName, playerName);
+            if (newName) {
+                playerName = newName;
+                localStorage.setItem('rps_playerName', playerName);
+                reset();
+            }
+        }
+        
+        function play(playerChoice) {
+            if (!gameActive) return;
+            const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+            const result = getResult(playerChoice, computerChoice);
+            updateScore(result);
+            displayResult(result, playerChoice, computerChoice);
+            checkGameOver();
+        }
+        
+        function getResult(player, computer) {
+            if (player === computer) return 'tie';
+            if ((player === 'rock' && computer === 'scissors') ||
+                (player === 'paper' && computer === 'rock') ||
+                (player === 'scissors' && computer === 'paper')) return 'win';
+            return 'lose';
+        }
+        
+        function updateScore(result) {
+            if (result === 'win') playerScore++;
+            else if (result === 'lose') computerScore++;
+            else tieScore++;
+            
+            document.getElementById('playerScore').textContent = playerScore;
+            document.getElementById('computerScore').textContent = computerScore;
+            document.getElementById('tieScore').textContent = tieScore;
+        }
+        
+        function displayResult(result, player, computer) {
+            const resultDiv = document.getElementById('result');
+            const t = translations[currentLang];
+            resultDiv.className = 'result ' + result;
+            
+            let msg = "";
+            if (result === 'win') msg = t.winPoint.replace("{p}", emojis[player]).replace("{c}", emojis[computer]);
+            else if (result === 'lose') msg = t.losePoint.replace("{c}", emojis[computer]).replace("{p}", emojis[player]);
+            else msg = t.tiePoint.replace("{p}", emojis[player]);
+            
+            resultDiv.textContent = msg;
+        }
+
+        function checkGameOver() {
+            if (playerScore === WINNING_SCORE || computerScore === WINNING_SCORE) {
+                gameActive = false;
+                const resultDiv = document.getElementById('result');
+                const t = translations[currentLang];
+                document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+                
+                if (playerScore === WINNING_SCORE) {
+                    resultDiv.innerHTML = t.matchWin.replace("{n}", playerName.toUpperCase());
+                    resultDiv.className = 'result win';
+                    saveMatchWin();
+                } else {
+                    resultDiv.innerHTML = t.matchLose;
+                    resultDiv.className = 'result lose';
+                }
+            }
+        }
+
+        function saveMatchWin() {
+            let scores = JSON.parse(localStorage.getItem('rps_highscores')) || [];
+            let playerEntry = scores.find(s => s.name === playerName);
+            if (playerEntry) playerEntry.score += 1;
+            else scores.push({ name: playerName, score: 1 });
+            scores.sort((a, b) => b.score - a.score);
+            localStorage.setItem('rps_highscores', JSON.stringify(scores.slice(0, 5)));
+            updateHighscoreDisplay();
+        }
+
+        function updateHighscoreDisplay() {
+            const list = document.getElementById('highscoreList');
+            const t = translations[currentLang];
+            const scores = JSON.parse(localStorage.getItem('rps_highscores')) || [];
+            list.innerHTML = scores.map((s, index) => `
+                <li class="highscore-item">
+                    <span>${index + 1}. ${s.name}</span>
+                    <span>${s.score} ${t.winsSuffix}</span>
+                </li>
+            `).join('') || t.noWins;
+        }
+        
+        function reset() {
+            playerScore = 0; computerScore = 0; tieScore = 0;
+            gameActive = true;
+            document.getElementById('playerScore').textContent = 0;
+            document.getElementById('computerScore').textContent = 0;
+            document.getElementById('tieScore').textContent = 0;
+            document.querySelectorAll('.choice-btn').forEach(b => b.disabled = false);
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result';
+            resultDiv.textContent = translations[currentLang].startMsg;
+            updateUI();
+        }
+    </script>
+</body>
+</html>
